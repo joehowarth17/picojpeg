@@ -5,6 +5,7 @@
 // Also integrated and tested changes from Chris Phoenix <cphoenix@gmail.com>.
 //------------------------------------------------------------------------------
 #include "picojpeg.h"
+#include <stdio.h>
 //------------------------------------------------------------------------------
 // Set to 1 if right shifts on signed ints are always unsigned (logical) shifts
 // When 1, arithmetic right shifts will be emulated by using a logical shift
@@ -220,6 +221,8 @@ static pjpeg_need_bytes_callback_t g_pNeedBytesCallback;
 static void *g_pCallback_data;
 static uint8 gCallbackStatus;
 static uint8 gReduce;
+
+uint64_t bytePointer =0;
 //------------------------------------------------------------------------------
 static void fillInBuf(void)
 {
@@ -993,19 +996,27 @@ static uint8 processRestart(void)
       if (getChar() == 0xFF)
          break;
 
-   if (i == 0)
+   if (i == 0){
+      printf("restart marker not found?\n");
       return PJPG_BAD_RESTART_MARKER;
+   }
    
    for ( ; i > 0; i--)
-      if ((c = getChar()) != 0xFF)
+      if ((c = getChar()) != 0xFF){
          break;
+      }
 
-   if (i == 0)
+   if (i == 0){
+      printf("Incorrect reset marker (like not a restart marker 0xFFXX).\n");
       return PJPG_BAD_RESTART_MARKER;
+   }
 
    // Is it the expected marker? If not, something bad happened.
-   if (c != (gNextRestartNum + M_RST0))
+   if (c != (gNextRestartNum + M_RST0)){
+      printf("Wrong marker. got %d expected %d\n",c,gNextRestartNum + M_RST0);
       return PJPG_BAD_RESTART_MARKER;
+
+   }
 
    // Reset each component's DC prediction values.
    gLastDC[0] = 0;
@@ -1013,9 +1024,9 @@ static uint8 processRestart(void)
    gLastDC[2] = 0;
 
    gRestartsLeft = gRestartInterval;
-
    gNextRestartNum = (gNextRestartNum + 1) & 7;
-
+printf("restarts interval:%d next num:%d\n",gRestartsLeft,gNextRestartNum);
+   
    // Get the bit buffer going again
 
    gBitsLeft = 8;
@@ -2280,7 +2291,7 @@ unsigned char pjpeg_decode_mcu(void)
 	  if (gNumMCUSRemainingY > 0)
 		  gNumMCUSRemainingX = gMaxMCUSPerRow;
    }
-   
+   printf("mcu remainging x:%d, y:%d\n",gNumMCUSRemainingX,gNumMCUSRemainingY);
    return 0;
 }
 //------------------------------------------------------------------------------

@@ -118,11 +118,14 @@ uint8 *pjpeg_load_from_file(const char *pFilename, int *x, int *y, int *comps, p
    row_blocks_per_mcu = image_info.m_MCUWidth >> 3;
    col_blocks_per_mcu = image_info.m_MCUHeight >> 3;
    
+   printf("decoding image: h->%d w->%d components->%d mcuPerRow->%d mcuPerCol->%d scanType->%d mcuWidth0>%d mcuHeight->%d\n",image_info.m_height,image_info.m_width,image_info.m_comps,image_info.m_MCUSPerRow,image_info.m_MCUSPerCol,image_info.m_scanType,image_info.m_MCUWidth,image_info.m_MCUHeight);
+
+   int count =0;
    for ( ; ; )
    {
       int y, x;
       uint8 *pDst_row;
-
+     
       status = pjpeg_decode_mcu();
       
       if (status)
@@ -130,7 +133,7 @@ uint8 *pjpeg_load_from_file(const char *pFilename, int *x, int *y, int *comps, p
          if (status != PJPG_NO_MORE_BLOCKS)
          {
             printf("pjpeg_decode_mcu() failed with status %u\n", status);
-
+             printf("decoding mcu: %d\n",count);
             free(pImage);
             fclose(g_pInFile);
             return NULL;
@@ -138,7 +141,7 @@ uint8 *pjpeg_load_from_file(const char *pFilename, int *x, int *y, int *comps, p
 
          break;
       }
-
+      count ++;
       if (mcu_y >= image_info.m_MCUSPerCol)
       {
          free(pImage);
